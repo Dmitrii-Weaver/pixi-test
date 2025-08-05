@@ -9,7 +9,7 @@ const ParallaxCard = ({ effect }) => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const initializeOnce = async () => {
       if (mountedRef.current || !containerRef.current || !isMounted) return;
       mountedRef.current = true;
@@ -19,19 +19,19 @@ const ParallaxCard = ({ effect }) => {
         await pixiApp.init({
           width: 400,
           height: 600,
-          backgroundColor: 0x2c2c2c,
+          backgroundColor: 0x4a4a4a,
           antialias: true,
         });
 
-        if (!isMounted) return; 
+        if (!isMounted) return;
 
         appRef.current = pixiApp;
         containerRef.current.appendChild(pixiApp.canvas);
 
         createPlaceholderCard(pixiApp);
-        
+
         loadImagesAndReplace(pixiApp);
-        
+
       } catch (error) {
         console.error('Failed to initialize PIXI app:', error);
         mountedRef.current = false;
@@ -54,26 +54,108 @@ const ParallaxCard = ({ effect }) => {
       appRef.current = null;
       mountedRef.current = false;
     };
-  }, []); 
+  }, []);
 
-  //gradient glow texture
+  // Create simple particle effects for the corners
+  const createParticles = () => {
+    const particles = [];
+
+    
+    for (let i = 0; i < 30; i++) {
+      const particle = new PIXI.Graphics();
+      particle.beginFill(0xff6b6b, 0.9);
+      particle.drawCircle(0, 0, Math.random() * 2 + 1); 
+      particle.endFill();
+
+      // Add glow effect to particles
+      const glowFilter = new PIXI.BlurFilter();
+      glowFilter.blur = 2;
+      particle.filters = [glowFilter];
+
+      const isLeft = i < 15;
+      if (isLeft) {
+        // Left side 
+        particle.x = -100 + (Math.random() - 0.5) * 50; 
+        particle.y = -120 + (Math.random() - 0.5) * 50; 
+      } else {
+        // Right side 
+        particle.x = 100 + (Math.random() - 0.5) * 50; 
+        particle.y = -120 + (Math.random() - 0.5) * 50; 
+      }
+
+      // Random initial properties for animation
+      particle.initialX = particle.x;
+      particle.initialY = particle.y;
+      particle.floatSpeed = Math.random() * 0.5 + 0.2;
+      particle.floatOffset = Math.random() * Math.PI * 2;
+      particle.alpha = Math.random() * 0.5 + 0.5;
+      particle.baseAlpha = particle.alpha;
+
+      particles.push(particle);
+    }
+
+    return particles;
+  };
   const createGlowTexture = (radius = 40) => {
     const canvas = document.createElement('canvas');
     const size = radius * 2;
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
-    
+
     const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
-    gradient.addColorStop(0, 'rgba(255, 107, 107, 0.8)'); 
-    gradient.addColorStop(0.4, 'rgba(255, 107, 107, 0.4)'); 
-    gradient.addColorStop(0.8, 'rgba(255, 71, 87, 0.1)'); 
-    gradient.addColorStop(1, 'rgba(255, 71, 87, 0)'); 
-    
+    gradient.addColorStop(0, 'rgba(255, 107, 107, 0.8)');
+    gradient.addColorStop(0.4, 'rgba(255, 107, 107, 0.4)');
+    gradient.addColorStop(0.8, 'rgba(255, 71, 87, 0.1)');
+    gradient.addColorStop(1, 'rgba(255, 71, 87, 0)');
+
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, size, size);
-    
+
     return PIXI.Texture.from(canvas);
+  };
+
+  // Create card-shaped shadow 
+  const createCardShadow = () => {
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x000000, 0.4);
+    shadow.drawRoundedRect(-100, -140, 200, 280, 10);
+    shadow.endFill();
+
+    // Add blur filter for soft edges
+    const blurFilter = new PIXI.BlurFilter();
+    blurFilter.blur = 4;
+    shadow.filters = [blurFilter];
+
+    return shadow;
+  };
+
+  // shine effect 
+  const createShine = () => {
+    const shine = new PIXI.Graphics();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = 16;
+    const ctx = canvas.getContext('2d');
+
+    const gradient = ctx.createLinearGradient(0, 0, 240, 0);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.6)');
+    gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.6)');
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 240, 16);
+
+    const shineTexture = PIXI.Texture.from(canvas);
+    const shineSprite = new PIXI.Sprite(shineTexture);
+    shineSprite.anchor.set(0.5);
+    shineSprite.rotation = -0.3; 
+    shineSprite.alpha = 0; 
+    shineSprite.blendMode = 'add'; 
+
+    return shineSprite;
   };
 
   const createPlaceholderCard = (app) => {
@@ -82,13 +164,20 @@ const ParallaxCard = ({ effect }) => {
     cardContainer.y = 300;
     app.stage.addChild(cardContainer);
 
+    // Create shadow 
+    const shadow = createCardShadow();
+    shadow.x = -20;
+    shadow.y = 20;
+    shadow.alpha = 0.6;
+    cardContainer.addChild(shadow);
+
     const glowTexture = createGlowTexture(40);
 
     const glowTopLeft = new PIXI.Sprite(glowTexture);
     glowTopLeft.anchor.set(0.5);
     glowTopLeft.x = -85;
     glowTopLeft.y = -110;
-    glowTopLeft.blendMode = 'add'; 
+    glowTopLeft.blendMode = 'add';
 
     const glowTopRight = new PIXI.Sprite(glowTexture);
     glowTopRight.anchor.set(0.5);
@@ -98,23 +187,33 @@ const ParallaxCard = ({ effect }) => {
 
     // Create placeholder graphics
     const base = new PIXI.Graphics();
-    base.beginFill(0x4a4a4a);
+    base.beginFill(0x5a5a5a);
     base.drawRoundedRect(-100, -140, 200, 280, 10);
     base.endFill();
 
     const character = new PIXI.Graphics();
-    character.beginFill(0x6b5b95);
+    character.beginFill(0x7b6ba5);
     character.drawRoundedRect(-80, -100, 160, 120, 8);
     character.endFill();
     character.y = -40;
 
+    // Create shine effect 
+    const shine = createShine();
+
+    // Create particles
+    const particles = createParticles();
+
     cardContainer.addChild(glowTopLeft);
     cardContainer.addChild(glowTopRight);
+
+    // Add particles behind the card but above the glows
+    particles.forEach(particle => cardContainer.addChild(particle));
+
     cardContainer.addChild(base);
     cardContainer.addChild(character);
+    cardContainer.addChild(shine); 
 
-    layersRef.current = { base, character, glowTopLeft, glowTopRight, container: cardContainer };
-
+    layersRef.current = { base, character, glowTopLeft, glowTopRight, shadow, shine, particles, container: cardContainer };
 
     app.stage.interactive = true;
     app.stage.on('mousemove', (event) => handleMouseMove(event, cardContainer));
@@ -128,13 +227,20 @@ const ParallaxCard = ({ effect }) => {
       ]);
 
       // Replace placeholders with actual images
-      const { container, glowTopLeft, glowTopRight } = layersRef.current;
+      const { container, glowTopLeft, glowTopRight, shadow, shine, particles } = layersRef.current;
       if (!container) return;
 
       container.removeChildren();
 
+      // Re-add all elements in order
+      container.addChild(shadow);
       container.addChild(glowTopLeft);
       container.addChild(glowTopRight);
+
+      // Add particles behind the card but above the glows
+      if (particles) {
+        particles.forEach(particle => container.addChild(particle));
+      }
 
       const base = new PIXI.Sprite(baseTexture);
       base.anchor.set(0.5);
@@ -147,8 +253,9 @@ const ParallaxCard = ({ effect }) => {
 
       container.addChild(base);
       container.addChild(character);
+      container.addChild(shine); // Shine goes on top
 
-      layersRef.current = { base, character, glowTopLeft, glowTopRight, container };
+      layersRef.current = { base, character, glowTopLeft, glowTopRight, shadow, shine, particles, container };
 
       console.log('Successfully loaded custom card images!');
 
@@ -185,7 +292,7 @@ const ParallaxCard = ({ effect }) => {
   };
 
   const applyEffect = (x, y) => {
-    const { base, character, glowTopLeft, glowTopRight } = layersRef.current;
+    const { base, character, glowTopLeft, glowTopRight, shadow, shine, particles } = layersRef.current;
     if (!base || !character) return;
 
     const maxRotX = 0.2;
@@ -205,8 +312,8 @@ const ParallaxCard = ({ effect }) => {
 
     // glow effects 
     const intensity = Math.sqrt(x * x + y * y);
-    const baseAlpha = 0.6 + intensity * 0.3; 
-    const scaleEffect = 1 + intensity * 0.1; 
+    const baseAlpha = 0.6 + intensity * 0.3;
+    const scaleEffect = 1 + intensity * 0.1;
 
     if (glowTopLeft) {
       glowTopLeft.alpha = baseAlpha;
@@ -216,6 +323,31 @@ const ParallaxCard = ({ effect }) => {
     if (glowTopRight) {
       glowTopRight.alpha = baseAlpha;
       glowTopRight.scale.set(scaleEffect);
+    }
+
+    // Shadow effects 
+    if (shadow) {
+      const shadowIntensity = intensity * 0.1;
+      shadow.alpha = 0.4 + shadowIntensity;
+    }
+
+    if (shine) {
+      shine.y = y * 120; 
+      shine.alpha = intensity * 0.4; 
+    }
+
+    if (particles) {
+      const time = Date.now() * 0.001; 
+      particles.forEach((particle, i) => {
+        // Gentle floating animation
+        particle.x = particle.initialX + Math.sin(time * particle.floatSpeed + particle.floatOffset) * 4;
+        particle.y = particle.initialY + Math.cos(time * particle.floatSpeed * 0.7 + particle.floatOffset) * 3;
+
+        particle.alpha = particle.baseAlpha + Math.sin(time * 2 + i) * 0.2 + (intensity * 0.3);
+
+        particle.x += x * 3;
+        particle.y += y * 2;
+      });
     }
   };
 
