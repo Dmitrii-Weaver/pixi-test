@@ -15,7 +15,7 @@ function App() {
 
   return (
     <div className="App">
-      <h1>My Super cool and shiny card with awesome effects!</h1>
+      <h1>My super cool and shiny cards with awesome effects!</h1>
       <div className="card-container">
         <ParallaxCard  />
       </div>
