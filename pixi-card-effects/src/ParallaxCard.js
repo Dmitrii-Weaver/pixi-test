@@ -17,8 +17,8 @@ const ParallaxCard = ({ effect }) => {
       try {
         const pixiApp = new PIXI.Application();
         await pixiApp.init({
-          width: 600, 
-          height: 900, 
+          width: 600,
+          height: 900,
           backgroundColor: 0x4a4a4a,
           antialias: true,
         });
@@ -58,10 +58,10 @@ const ParallaxCard = ({ effect }) => {
   // Create particles with color parameter
   const createParticles = (color = 'red', isBottomRow = false, isRightCard = false) => {
     const particles = [];
-    
+
     let createLeftParticles = true;
     let createRightParticles = true;
-    
+
     if (isBottomRow) {
       if (!isRightCard) {
         // Bottom left card 
@@ -71,18 +71,18 @@ const ParallaxCard = ({ effect }) => {
         createLeftParticles = false;
       }
     }
-    
+
     for (let i = 0; i < 30; i++) {
       const particle = new PIXI.Graphics();
-      
+
       // Set particle color 
       if (color === 'blue') {
         particle.beginFill(0x6b6bff, 0.9);
       } else {
         particle.beginFill(0xff6b6b, 0.9);
       }
-      
-      particle.drawCircle(0, 0, Math.random() * 2 + 1); 
+
+      particle.drawCircle(0, 0, Math.random() * 2 + 1);
       particle.endFill();
 
       // Add glow effect 
@@ -91,19 +91,19 @@ const ParallaxCard = ({ effect }) => {
       particle.filters = [glowFilter];
 
       const isLeft = i < 15;
-      
+
       // Skip particles on sides that don't have them
       if (isLeft && !createLeftParticles) continue;
       if (!isLeft && !createRightParticles) continue;
-      
+
       if (isLeft) {
         // Left side 
-        particle.x = -82 + (Math.random() - 0.5) * 50; 
-        particle.y = -120 + (Math.random() - 0.5) * 50; 
+        particle.x = -82 + (Math.random() - 0.5) * 50;
+        particle.y = -120 + (Math.random() - 0.5) * 50;
       } else {
         // Right side 
-        particle.x = 82 + (Math.random() - 0.5) * 50; 
-        particle.y = -120 + (Math.random() - 0.5) * 50; 
+        particle.x = 82 + (Math.random() - 0.5) * 50;
+        particle.y = -120 + (Math.random() - 0.5) * 50;
       }
 
       // properties for animation
@@ -128,7 +128,7 @@ const ParallaxCard = ({ effect }) => {
     const ctx = canvas.getContext('2d');
 
     const gradient = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
-    
+
     if (color === 'blue') {
       gradient.addColorStop(0, 'rgba(107, 107, 255, 0.8)');
       gradient.addColorStop(0.4, 'rgba(107, 107, 255, 0.4)');
@@ -154,14 +154,14 @@ const ParallaxCard = ({ effect }) => {
 
   // Create purple atmospheric effect for bottom cards
   const createPurpleAtmosphere = () => {
-    const purpleTexture = createGlowTexture(80, 'purple'); 
+    const purpleTexture = createGlowTexture(80, 'purple');
     const atmosphere = new PIXI.Sprite(purpleTexture);
     atmosphere.anchor.set(0.5);
     atmosphere.x = 0;
-    atmosphere.y = 200; 
+    atmosphere.y = 200;
     atmosphere.alpha = 0.4;
     atmosphere.blendMode = 'add';
-    atmosphere.scale.set(1.5); 
+    atmosphere.scale.set(1.5);
     return atmosphere;
   };
 
@@ -169,25 +169,25 @@ const ParallaxCard = ({ effect }) => {
   const createCardShadow = (cutCorners = false) => {
     const shadow = new PIXI.Graphics();
     shadow.beginFill(0x000000, 0.4);
-    
+
     if (cutCorners) {
       // Create shape with cut corners 
-      const cornerSize = 15; 
-      shadow.moveTo(-100 + cornerSize, -140); 
-      shadow.lineTo(100 - cornerSize, -140); 
-      shadow.lineTo(100, -140 + cornerSize); 
-      shadow.lineTo(100, 140 - cornerSize); 
-      shadow.lineTo(100 - cornerSize, 140); 
-      shadow.lineTo(-100 + cornerSize, 140); 
-      shadow.lineTo(-100, 140 - cornerSize); 
-      shadow.lineTo(-100, -140 + cornerSize); 
-      shadow.lineTo(-100 + cornerSize, -140); 
+      const cornerSize = 15;
+      shadow.moveTo(-100 + cornerSize, -140);
+      shadow.lineTo(100 - cornerSize, -140);
+      shadow.lineTo(100, -140 + cornerSize);
+      shadow.lineTo(100, 140 - cornerSize);
+      shadow.lineTo(100 - cornerSize, 140);
+      shadow.lineTo(-100 + cornerSize, 140);
+      shadow.lineTo(-100, 140 - cornerSize);
+      shadow.lineTo(-100, -140 + cornerSize);
+      shadow.lineTo(-100 + cornerSize, -140);
       shadow.closePath();
     } else {
       // top row cards
       shadow.drawRoundedRect(-100, -140, 200, 280, 10);
     }
-    
+
     shadow.endFill();
 
     // Add blur filter
@@ -198,8 +198,37 @@ const ParallaxCard = ({ effect }) => {
     return shadow;
   };
 
-  // shine effect 
-  const createShine = () => {
+  // Create card mask for shine effect
+  const createCardMask = (cutCorners = false) => {
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0xffffff);
+
+    if (cutCorners) {
+      // Create shape with cut corners matching the card
+      const cornerSize = 15;
+      mask.moveTo(-100 + cornerSize, -140);
+      mask.lineTo(100 - cornerSize, -140);
+      mask.lineTo(100, -140 + cornerSize);
+      mask.lineTo(100, 140 - cornerSize);
+      mask.lineTo(100 - cornerSize, 140);
+      mask.lineTo(-100 + cornerSize, 140);
+      mask.lineTo(-100, 140 - cornerSize);
+      mask.lineTo(-100, -140 + cornerSize);
+      mask.lineTo(-100 + cornerSize, -140);
+      mask.closePath();
+    } else {
+      // Top row cards - rounded rectangle
+      mask.drawRoundedRect(-100, -140, 200, 280, 10);
+    }
+
+    mask.endFill();
+    return mask;
+  };
+
+  // shine effect with proper masking
+  const createShine = (isBottomRow = false) => {
+    const shineContainer = new PIXI.Container();
+
     const shine = new PIXI.Graphics();
 
     const canvas = document.createElement('canvas');
@@ -219,11 +248,18 @@ const ParallaxCard = ({ effect }) => {
     const shineTexture = PIXI.Texture.from(canvas);
     const shineSprite = new PIXI.Sprite(shineTexture);
     shineSprite.anchor.set(0.5);
-    shineSprite.rotation = -0.3; 
-    shineSprite.alpha = 0; 
-    shineSprite.blendMode = 'add'; 
+    shineSprite.rotation = -0.3;
+    shineSprite.alpha = 0;
+    shineSprite.blendMode = 'add';
 
-    return shineSprite;
+    shineContainer.addChild(shineSprite);
+
+    // Create and apply mask based on card type
+    const mask = createCardMask(isBottomRow);
+    shineContainer.addChild(mask);
+    shineContainer.mask = mask;
+
+    return { container: shineContainer, sprite: shineSprite, mask };
   };
 
   const createSingleCard = (xPosition, yPosition, isBottomRow = false, isRightCard = false) => {
@@ -294,14 +330,14 @@ const ParallaxCard = ({ effect }) => {
     character.endFill();
     character.y = -40;
 
-    // Create shine effect 
-    const shine = createShine();
+    // Create shine effect with proper masking
+    const shineData = createShine(isBottomRow);
 
     // Create purple atmosphere effect 
     let purpleAtmosphere = null;
     if (isBottomRow) {
       purpleAtmosphere = createPurpleAtmosphere();
-      cardContainer.addChild(purpleAtmosphere); 
+      cardContainer.addChild(purpleAtmosphere);
     }
 
     // Create particles with appropriate color
@@ -313,16 +349,18 @@ const ParallaxCard = ({ effect }) => {
 
     cardContainer.addChild(base);
     cardContainer.addChild(character);
-    cardContainer.addChild(shine); 
+    cardContainer.addChild(shineData.container);
 
-    return { 
+    return {
       container: cardContainer,
-      base, 
-      character, 
-      glowTopLeft, 
-      glowTopRight, 
-      shadow, 
-      shine, 
+      base,
+      character,
+      glowTopLeft,
+      glowTopRight,
+      shadow,
+      shine: shineData.sprite,
+      shineContainer: shineData.container,
+      shineMask: shineData.mask,
       particles,
       purpleAtmosphere
     };
@@ -345,7 +383,7 @@ const ParallaxCard = ({ effect }) => {
     const secondCardBack = createSingleCard(450, 600, true, true);
     app.stage.addChild(secondCardBack.container);
 
-    layersRef.current = { 
+    layersRef.current = {
       mainCard,
       cardBack,
       secondCard,
@@ -359,8 +397,8 @@ const ParallaxCard = ({ effect }) => {
   const loadImagesAndReplace = async (app) => {
     try {
       const [
-        baseTexture, 
-        characterTexture, 
+        baseTexture,
+        characterTexture,
         cardBackTexture,
         secondBaseTexture,
         secondBgTexture,
@@ -381,15 +419,15 @@ const ParallaxCard = ({ effect }) => {
 
       // Replace placeholders (top left)
       replaceCardContent(mainCard, baseTexture, characterTexture, false);
-      
+
       // Replace placeholders (top right)
-      replaceCardContent(cardBack, cardBackTexture, null, false); 
+      replaceCardContent(cardBack, cardBackTexture, null, false);
 
       // Replace placeholders (bottom left)
       replaceCardContentWithBg(secondCard, secondBaseTexture, secondBgTexture, secondCharacterTexture, true);
-      
+
       // Replace back placeholders (bottom right) 
-      replaceCardContent(secondCardBack, secondBackTexture, null, true); 
+      replaceCardContent(secondCardBack, secondBackTexture, null, true);
 
       console.log('Successfully loaded custom card images!');
 
@@ -399,8 +437,8 @@ const ParallaxCard = ({ effect }) => {
   };
 
   const replaceCardContent = (cardData, baseTexture, characterTexture, useSmallScale = false) => {
-    const { container, glowTopLeft, glowTopRight, shadow, shine, particles } = cardData;
-    
+    const { container, glowTopLeft, glowTopRight, shadow, shineContainer, particles } = cardData;
+
     container.removeChildren();
 
     // Re-add all elements in order
@@ -413,7 +451,7 @@ const ParallaxCard = ({ effect }) => {
       particles.forEach(particle => container.addChild(particle));
     }
 
-    const scale = useSmallScale ? 0.25 : 0.5; 
+    const scale = useSmallScale ? 0.25 : 0.5;
     const base = new PIXI.Sprite(baseTexture);
     base.anchor.set(0.5);
     base.scale.set(scale);
@@ -429,17 +467,17 @@ const ParallaxCard = ({ effect }) => {
       container.addChild(character);
     }
 
-    container.addChild(shine); 
+    container.addChild(shineContainer);
 
     // Update the card data 
     cardData.base = base;
     cardData.character = character;
-    cardData.baseScale = scale; 
+    cardData.baseScale = scale;
   };
 
   const replaceCardContentWithBg = (cardData, baseTexture, bgTexture, characterTexture, characterBelowBase = false) => {
-    const { container, glowTopLeft, glowTopRight, shadow, shine, particles } = cardData;
-    
+    const { container, glowTopLeft, glowTopRight, shadow, shineContainer, particles } = cardData;
+
     container.removeChildren();
 
     // Re-add all elements in order
@@ -455,7 +493,7 @@ const ParallaxCard = ({ effect }) => {
     // Add background first
     const background = new PIXI.Sprite(bgTexture);
     background.anchor.set(0.5);
-    background.scale.set(0.25); 
+    background.scale.set(0.25);
     container.addChild(background);
 
     // Add character 
@@ -463,8 +501,8 @@ const ParallaxCard = ({ effect }) => {
     if (characterTexture && characterBelowBase) {
       character = new PIXI.Sprite(characterTexture);
       character.anchor.set(0.5);
-      character.scale.set(0.25); 
-      character.y = 1; 
+      character.scale.set(0.25);
+      character.y = 1;
       container.addChild(character);
     }
 
@@ -478,23 +516,23 @@ const ParallaxCard = ({ effect }) => {
     if (characterTexture && !characterBelowBase) {
       character = new PIXI.Sprite(characterTexture);
       character.anchor.set(0.5);
-      character.scale.set(0.25); 
+      character.scale.set(0.25);
       character.y = -40;
       container.addChild(character);
     }
 
-    container.addChild(shine); 
+    container.addChild(shineContainer);
 
     // Update the card data 
     cardData.base = base;
     cardData.character = character;
     cardData.background = background;
-    cardData.baseScale = 0.25; 
+    cardData.baseScale = 0.25;
   };
 
   const handleMouseMove = (event, mainCard, cardBack, secondCard, secondCardBack) => {
     const mousePos = event.data.global;
-    
+
     // Handle card (top left)
     const mainCardBounds = {
       x: mainCard.container.x - 100,
@@ -608,16 +646,16 @@ const ParallaxCard = ({ effect }) => {
     const rotY = x * maxRotY;
     const rotX = -y * maxRotX;
 
-    
+
     const intendedScale = baseScale || 0.5;
     const scaleMultiplier = intendedScale === 0.25 ? 0.01 : 0.02;
 
     // Background layer 
     if (background) {
-      background.skew.set(rotY * 0.2, rotX * 0.2); 
-      background.scale.set(0.25 + Math.abs(x + y) * 0.005); 
-      background.x = x * 2; 
-      background.y = y * 1.5; 
+      background.skew.set(rotY * 0.2, rotX * 0.2);
+      background.scale.set(0.25 + Math.abs(x + y) * 0.005);
+      background.x = x * 2;
+      background.y = y * 1.5;
     }
 
     // Base layer 
@@ -655,12 +693,12 @@ const ParallaxCard = ({ effect }) => {
     }
 
     if (shine) {
-      shine.y = y * 120; 
-      shine.alpha = intensity * 0.4; 
+      shine.y = y * 120;
+      shine.alpha = intensity * 0.4;
     }
 
     if (particles) {
-      const time = Date.now() * 0.001; 
+      const time = Date.now() * 0.001;
       particles.forEach((particle, i) => {
         // floating animation
         particle.x = particle.initialX + Math.sin(time * particle.floatSpeed + particle.floatOffset) * 4;
