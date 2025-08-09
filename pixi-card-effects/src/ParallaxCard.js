@@ -714,7 +714,7 @@ const ParallaxCard = ({ effect }) => {
 
   return (
     <div>
-      <h2>And my own art.</h2>
+      <h2>And my own art + provided assets.</h2>
       <div ref={containerRef} style={{ border: '1px solid #ccc', margin: '20px 0' }} />
     </div>
   );
