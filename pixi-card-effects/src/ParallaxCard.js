@@ -6,6 +6,8 @@ const ParallaxCard = ({ effect }) => {
   const appRef = useRef(null);
   const layersRef = useRef({});
   const mountedRef = useRef(false);
+  const selectedCardRef = useRef(null);
+  const lastClickTimeRef = useRef(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -267,7 +269,7 @@ const ParallaxCard = ({ effect }) => {
     cardContainer.x = xPosition;
     cardContainer.y = yPosition;
 
-    // Create shadow with appropriate shape 
+    // Create shadow
     const shadow = createCardShadow(isBottomRow);
     shadow.x = -20;
     shadow.y = 20;
@@ -333,7 +335,7 @@ const ParallaxCard = ({ effect }) => {
     // Create shine effect with proper masking
     const shineData = createShine(isBottomRow);
 
-    // Create purple atmosphere effect 
+    // Create purple effect 
     let purpleAtmosphere = null;
     if (isBottomRow) {
       purpleAtmosphere = createPurpleAtmosphere();
@@ -351,6 +353,13 @@ const ParallaxCard = ({ effect }) => {
     cardContainer.addChild(character);
     cardContainer.addChild(shineData.container);
 
+    // Make card interactive for selection
+    cardContainer.interactive = true;
+    cardContainer.buttonMode = true;
+    cardContainer.cursor = 'pointer';
+    
+    cardContainer.on('click', () => handleCardSelection(cardContainer));
+
     return {
       container: cardContainer,
       base,
@@ -362,7 +371,8 @@ const ParallaxCard = ({ effect }) => {
       shineContainer: shineData.container,
       shineMask: shineData.mask,
       particles,
-      purpleAtmosphere
+      purpleAtmosphere,
+      isSelected: false
     };
   };
 
@@ -392,6 +402,70 @@ const ParallaxCard = ({ effect }) => {
 
     app.stage.interactive = true;
     app.stage.on('mousemove', (event) => handleMouseMove(event, mainCard, cardBack, secondCard, secondCardBack));
+  };
+
+  const handleCardSelection = (cardContainer) => {
+    // Debounce to prevent double-clicks
+    const now = Date.now();
+    if (now - lastClickTimeRef.current < 200) {
+      console.log('Click ignored (too fast)');
+      return;
+    }
+    lastClickTimeRef.current = now;
+
+    console.log('Card clicked!'); 
+    
+    // Find which card was clicked
+    const cardKeys = Object.keys(layersRef.current);
+    let clickedCard = null;
+    let clickedCardKey = null;
+
+    for (const key of cardKeys) {
+      if (layersRef.current[key].container === cardContainer) {
+        clickedCard = layersRef.current[key];
+        clickedCardKey = key;
+        break;
+      }
+    }
+
+    if (!clickedCard) {
+      console.log('Clicked card not found');
+      return;
+    }
+
+    console.log('Clicked card:', clickedCardKey, 'Current selection:', selectedCardRef.current);
+
+    // Deselect same card
+    if (selectedCardRef.current === clickedCardKey) {
+      console.log('Deselecting card:', clickedCardKey);
+      selectedCardRef.current = null;
+      clickedCard.isSelected = false;
+    } else {
+      // Deselect previous card
+      if (selectedCardRef.current) {
+        console.log('Deselecting previous card:', selectedCardRef.current);
+        layersRef.current[selectedCardRef.current].isSelected = false;
+      }
+      // Select new card
+      console.log('Selecting new card:', clickedCardKey);
+      selectedCardRef.current = clickedCardKey;
+      clickedCard.isSelected = true;
+    }
+
+    console.log('New selection state:', selectedCardRef.current);
+
+    // Force immediate visual update 
+    const currentMousePos = appRef.current.stage.eventData?.global || { x: 300, y: 450 };
+    handleMouseMove({ data: { global: currentMousePos } }, 
+      layersRef.current.mainCard, 
+      layersRef.current.cardBack, 
+      layersRef.current.secondCard, 
+      layersRef.current.secondCardBack
+    );
+  };
+
+  const updateCardSelection = (cardData) => {
+    
   };
 
   const loadImagesAndReplace = async (app) => {
@@ -469,6 +543,12 @@ const ParallaxCard = ({ effect }) => {
 
     container.addChild(shineContainer);
 
+    // Re-add click handler after replacing content
+    container.interactive = true;
+    container.buttonMode = true;
+    container.cursor = 'pointer';
+    container.on('click', () => handleCardSelection(container));
+
     // Update the card data 
     cardData.base = base;
     cardData.character = character;
@@ -522,6 +602,12 @@ const ParallaxCard = ({ effect }) => {
     }
 
     container.addChild(shineContainer);
+
+    // Re-add click handler after replacing content
+    container.interactive = true;
+    container.buttonMode = true;
+    container.cursor = 'pointer';
+    container.on('click', () => handleCardSelection(container));
 
     // Update the card data 
     cardData.base = base;
@@ -638,7 +724,7 @@ const ParallaxCard = ({ effect }) => {
   };
 
   const applyEffect = (cardData, x, y) => {
-    const { base, character, background, baseScale, glowTopLeft, glowTopRight, shadow, shine, particles } = cardData;
+    const { base, character, background, baseScale, glowTopLeft, glowTopRight, shadow, shine, particles, purpleAtmosphere, isSelected, container } = cardData;
     if (!base) return;
 
     const maxRotX = 0.2;
@@ -646,26 +732,33 @@ const ParallaxCard = ({ effect }) => {
     const rotY = x * maxRotY;
     const rotX = -y * maxRotX;
 
-
     const intendedScale = baseScale || 0.5;
     const scaleMultiplier = intendedScale === 0.25 ? 0.01 : 0.02;
+
+    // Scaling depending on selected state
+    const selectionBonus = isSelected ? 0.8 : 0;
+    const selectionScaleBonus = isSelected ? 0.02 : 0; 
+    const containerScaleBonus = isSelected ? 1.02 : 1; 
+
+    // Container scale (for selection effect)
+    container.scale.set(containerScaleBonus);
 
     // Background layer 
     if (background) {
       background.skew.set(rotY * 0.2, rotX * 0.2);
-      background.scale.set(0.25 + Math.abs(x + y) * 0.005);
+      background.scale.set(0.25 + Math.abs(x + y) * 0.005 + selectionScaleBonus);
       background.x = x * 2;
       background.y = y * 1.5;
     }
 
     // Base layer 
     base.skew.set(rotY * 0.3, rotX * 0.3);
-    base.scale.set(intendedScale + Math.abs(x + y) * scaleMultiplier);
+    base.scale.set(intendedScale + Math.abs(x + y) * scaleMultiplier + selectionScaleBonus);
 
     // Character layer 
     if (character) {
       character.skew.set(rotY * 0.35, rotX * 0.35);
-      character.scale.set(intendedScale + Math.abs(x + y) * (scaleMultiplier * 1.25));
+      character.scale.set(intendedScale + Math.abs(x + y) * (scaleMultiplier * 1.25) + selectionScaleBonus);
       character.x = x * 1.5;
       const baseCharacterY = cardData === layersRef.current.secondCard ? 1 : -40;
       character.y = baseCharacterY + y * 1.5;
@@ -673,28 +766,34 @@ const ParallaxCard = ({ effect }) => {
 
     // glow effects 
     const intensity = Math.sqrt(x * x + y * y);
-    const baseAlpha = 0.6 + intensity * 0.3;
-    const scaleEffect = 1 + intensity * 0.1;
+    const baseAlpha = 0.6 + intensity * 0.3 + selectionBonus;
+    const scaleEffect = 1 + intensity * 0.1 + (isSelected ? 0.8 : 0); // Much bigger glow
 
     if (glowTopLeft) {
-      glowTopLeft.alpha = baseAlpha;
+      glowTopLeft.alpha = Math.min(baseAlpha, 1);
       glowTopLeft.scale.set(scaleEffect);
     }
 
     if (glowTopRight) {
-      glowTopRight.alpha = baseAlpha;
+      glowTopRight.alpha = Math.min(baseAlpha, 1);
       glowTopRight.scale.set(scaleEffect);
     }
 
     // Shadow effects 
     if (shadow) {
-      const shadowIntensity = intensity * 0.1;
-      shadow.alpha = 0.4 + shadowIntensity;
+      const shadowIntensity = intensity * 0.1 + (isSelected ? 0.4 : 0);
+      shadow.alpha = Math.min(0.4 + shadowIntensity, 1);
     }
 
     if (shine) {
       shine.y = y * 120;
-      shine.alpha = intensity * 0.4;
+      shine.alpha = intensity * 0.4 + (isSelected ? 0.6 : 0); // brighter shine
+    }
+
+    // Purple atmosphere enhancement for selected bottom cards
+    if (purpleAtmosphere) {
+      purpleAtmosphere.alpha = 0.4 + (isSelected ? 0.6 : 0); 
+      purpleAtmosphere.scale.set(1.5 + (isSelected ? 1 : 0)); 
     }
 
     if (particles) {
@@ -704,7 +803,12 @@ const ParallaxCard = ({ effect }) => {
         particle.x = particle.initialX + Math.sin(time * particle.floatSpeed + particle.floatOffset) * 4;
         particle.y = particle.initialY + Math.cos(time * particle.floatSpeed * 0.7 + particle.floatOffset) * 3;
 
-        particle.alpha = particle.baseAlpha + Math.sin(time * 2 + i) * 0.2 + (intensity * 0.3);
+        const particleAlpha = particle.baseAlpha + Math.sin(time * 2 + i) * 0.2 + (intensity * 0.3) + (isSelected ? 0.7 : 0);
+        particle.alpha = Math.min(particleAlpha, 1);
+
+        // scale boost for selected cards
+        const particleScale = isSelected ? 2 : 1;
+        particle.scale.set(particleScale);
 
         particle.x += x * 3;
         particle.y += y * 2;
@@ -714,7 +818,7 @@ const ParallaxCard = ({ effect }) => {
 
   return (
     <div>
-      <h2>And my own art + provided assets.</h2>
+      <h2>Using my and provided art! Now clickable!</h2>
       <div ref={containerRef} style={{ border: '1px solid #ccc', margin: '20px 0' }} />
     </div>
   );
