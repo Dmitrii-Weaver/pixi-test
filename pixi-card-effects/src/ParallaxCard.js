@@ -357,7 +357,7 @@ const ParallaxCard = ({ effect }) => {
     cardContainer.interactive = true;
     cardContainer.buttonMode = true;
     cardContainer.cursor = 'pointer';
-    
+
     cardContainer.on('click', () => handleCardSelection(cardContainer));
 
     return {
@@ -413,8 +413,8 @@ const ParallaxCard = ({ effect }) => {
     }
     lastClickTimeRef.current = now;
 
-    console.log('Card clicked!'); 
-    
+    console.log('Card clicked!');
+
     // Find which card was clicked
     const cardKeys = Object.keys(layersRef.current);
     let clickedCard = null;
@@ -456,16 +456,16 @@ const ParallaxCard = ({ effect }) => {
 
     // Force immediate visual update 
     const currentMousePos = appRef.current.stage.eventData?.global || { x: 300, y: 450 };
-    handleMouseMove({ data: { global: currentMousePos } }, 
-      layersRef.current.mainCard, 
-      layersRef.current.cardBack, 
-      layersRef.current.secondCard, 
+    handleMouseMove({ data: { global: currentMousePos } },
+      layersRef.current.mainCard,
+      layersRef.current.cardBack,
+      layersRef.current.secondCard,
       layersRef.current.secondCardBack
     );
   };
 
   const updateCardSelection = (cardData) => {
-    
+
   };
 
   const loadImagesAndReplace = async (app) => {
@@ -676,7 +676,7 @@ const ParallaxCard = ({ effect }) => {
       mousePos.x >= secondCardBackBounds.x &&
       mousePos.x <= secondCardBackBounds.x + secondCardBackBounds.width &&
       mousePos.y >= secondCardBackBounds.y &&
-      mousePos.y <= secondCardBackBounds.y + secondCardBounds.height
+      mousePos.y <= secondCardBounds.y + secondCardBounds.height
     );
 
     if (isOverMain) {
@@ -737,8 +737,8 @@ const ParallaxCard = ({ effect }) => {
 
     // Scaling depending on selected state
     const selectionBonus = isSelected ? 0.8 : 0;
-    const selectionScaleBonus = isSelected ? 0.02 : 0; 
-    const containerScaleBonus = isSelected ? 1.02 : 1; 
+    const selectionScaleBonus = isSelected ? 0.02 : 0;
+    const containerScaleBonus = isSelected ? 1.02 : 1;
 
     // Container scale (for selection effect)
     container.scale.set(containerScaleBonus);
@@ -767,7 +767,7 @@ const ParallaxCard = ({ effect }) => {
     // glow effects 
     const intensity = Math.sqrt(x * x + y * y);
     const baseAlpha = 0.6 + intensity * 0.3 + selectionBonus;
-    const scaleEffect = 1 + intensity * 0.1 + (isSelected ? 0.8 : 0); // Much bigger glow
+    const scaleEffect = 1 + intensity * 0.1 + (isSelected ? 0.5 : 0); 
 
     if (glowTopLeft) {
       glowTopLeft.alpha = Math.min(baseAlpha, 1);
@@ -785,15 +785,31 @@ const ParallaxCard = ({ effect }) => {
       shadow.alpha = Math.min(0.4 + shadowIntensity, 1);
     }
 
+    // Shine effect - scale with card selection
     if (shine) {
       shine.y = y * 120;
-      shine.alpha = intensity * 0.4 + (isSelected ? 0.6 : 0); // brighter shine
+      shine.alpha = intensity * 0.4 + (isSelected ? 0.3 : 0);
+
+      // Reset shine sprite to normal size
+      shine.scale.set(1.0, 1.0);
+    }
+
+    if (cardData.shineContainer && cardData.shineMask) {
+      const shineScale = isSelected ? 1.07 : 1.0; 
+      cardData.shineContainer.scale.set(shineScale);
+
+      // Also scale the mask to match
+      cardData.shineMask.scale.set(shineScale);
+
+      if (isSelected) {
+        console.log('Scaling shine container and mask to:', shineScale);
+      }
     }
 
     // Purple atmosphere enhancement for selected bottom cards
     if (purpleAtmosphere) {
-      purpleAtmosphere.alpha = 0.4 + (isSelected ? 0.6 : 0); 
-      purpleAtmosphere.scale.set(1.5 + (isSelected ? 1 : 0)); 
+      purpleAtmosphere.alpha = 0.4 + (isSelected ? 0.6 : 0);
+      purpleAtmosphere.scale.set(1.5 + (isSelected ? 1 : 0));
     }
 
     if (particles) {
