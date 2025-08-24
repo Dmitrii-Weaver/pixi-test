@@ -59,7 +59,7 @@ const ParallaxCard = ({ effect }) => {
     };
   }, []);
 
-  // Create holo gradient texture
+  // Create holographic gradient texture
   const createHolographicTexture = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 200;
@@ -82,7 +82,7 @@ const ParallaxCard = ({ effect }) => {
     return PIXI.Texture.from(canvas);
   };
 
-  // Create holo effect with image-based mask
+  // Create holographic effect with image-based mask
   const createHolographicOverlay = (maskTexture = null, isBottomRow = false) => {
     const holoContainer = new PIXI.Container();
     
@@ -90,34 +90,40 @@ const ParallaxCard = ({ effect }) => {
     const strips = [];
     const colors = [0xff0080, 0xff4000, 0xff8000, 0xffff00, 0x80ff00, 0x00ff80, 0x0080ff, 0x4000ff];
     
-    for (let i = 0; i < colors.length; i++) {
+    // Create more strips with better spacing for full coverage
+    const totalStrips = colors.length + 4; // Add 4 extra strips for better coverage
+    
+    for (let i = 0; i < totalStrips; i++) {
       const strip = new PIXI.Graphics();
-      strip.beginFill(colors[i], 0.4);
+      const colorIndex = i % colors.length; // Cycle through colors
+      strip.beginFill(colors[colorIndex], 0.4);
       
-      // Create diagonal strips 
+      // Create diagonal strips that cover the card
       const width = 30;
       const height = 400;
       strip.drawRect(-width/2, -height/2, width, height);
       strip.endFill();
       
-      // Position strips 
-      strip.x = (i - colors.length/2) * 25;
-      strip.rotation = 0.4; 
+      // Position strips with tighter spacing for better coverage
+      strip.x = (i - totalStrips/2) * 20; // Reduced from 25 to 20 for tighter spacing
+      strip.rotation = 0.4; // Diagonal angle
       strip.alpha = 0;
-      strip.blendMode = 'screen'; 
+      strip.blendMode = 'screen'; // Beautiful holographic blend
       
       strips.push(strip);
       holoContainer.addChild(strip);
     }
     
-    // Create mask 
+    // Create mask - use image-based mask if available, otherwise fallback to geometric
     let mask;
     if (maskTexture) {
-      // Use the image as mask
+      // Use the actual card image as mask
       mask = new PIXI.Sprite(maskTexture);
       mask.anchor.set(0.5);
+      // Scale to match the card scale
       mask.scale.set(isBottomRow ? 0.25 : 0.5);
     } else {
+      // Fallback to geometric mask
       mask = new PIXI.Graphics();
       mask.beginFill(0xffffff);
       
@@ -245,7 +251,7 @@ const ParallaxCard = ({ effect }) => {
     return PIXI.Texture.from(canvas);
   };
 
-  // Create purple atmospheric effect
+  // Create purple atmospheric effect for bottom cards
   const createPurpleAtmosphere = () => {
     const purpleTexture = createGlowTexture(80, 'purple');
     const atmosphere = new PIXI.Sprite(purpleTexture);
@@ -291,7 +297,7 @@ const ParallaxCard = ({ effect }) => {
     return shadow;
   };
 
-  // Create card mask for shine effect
+  // Create card mask for shine effect - also updated to use image-based masks
   const createCardMask = (maskTexture = null, isBottomRow = false) => {
     let mask;
     
@@ -359,7 +365,7 @@ const ParallaxCard = ({ effect }) => {
 
     shineContainer.addChild(shineSprite);
 
-    // Create and apply mask based on card type 
+    // Create and apply mask based on card type - now uses image-based mask
     const mask = createCardMask(maskTexture, isBottomRow);
     shineContainer.addChild(mask);
     shineContainer.mask = mask;
@@ -438,7 +444,7 @@ const ParallaxCard = ({ effect }) => {
     // Create shine effect
     const shineData = createShine(null, isBottomRow);
 
-    // Create holographic overlay 
+    // Create holo overlay
     const holoData = createHolographicOverlay(null, isBottomRow);
 
     // Create purple effect 
@@ -473,7 +479,7 @@ const ParallaxCard = ({ effect }) => {
     cardContainer.addChild(base);
     cardContainer.addChild(character);
     
-    // Add holographic effect 
+    // Add holo effect LAST so it's on top
     cardContainer.addChild(holoData.container);
     cardContainer.addChild(shineData.container);
 
@@ -509,15 +515,15 @@ const ParallaxCard = ({ effect }) => {
     const mainCard = createSingleCard(150, 300, false, false);
     app.stage.addChild(mainCard.container);
 
-    // Create card (right top)
+    // (right top)
     const cardBack = createSingleCard(450, 300, false, true);
     app.stage.addChild(cardBack.container);
 
-    // Create card (left bottom) 
+    // (left bottom) 
     const secondCard = createSingleCard(150, 600, true, false);
     app.stage.addChild(secondCard.container);
 
-    // Create card (right bottom) 
+    // (right bottom) 
     const secondCardBack = createSingleCard(450, 600, true, true);
     app.stage.addChild(secondCardBack.container);
 
@@ -596,6 +602,8 @@ const ParallaxCard = ({ effect }) => {
   const updateHolographicMask = (cardData, maskTexture) => {
     if (!cardData.holoContainer || !maskTexture) return;
     
+    console.log('Updating holo mask with image texture');
+    
     // Remove old mask
     if (cardData.holoMask) {
       cardData.holoContainer.removeChild(cardData.holoMask);
@@ -604,6 +612,7 @@ const ParallaxCard = ({ effect }) => {
     // Create new image-based mask
     const newMask = new PIXI.Sprite(maskTexture);
     newMask.anchor.set(0.5);
+    // Scale to match the card scale
     newMask.scale.set(cardData.isBottomRow ? 0.25 : 0.5);
     
     // Add new mask
@@ -663,17 +672,17 @@ const ParallaxCard = ({ effect }) => {
       updateHolographicMask(mainCard, baseTexture);
       updateShineMask(mainCard, baseTexture);
 
-      // Replace placeholders and update masks (top right)
+      // (top right)
       replaceCardContent(cardBack, cardBackTexture, null, false);
       updateHolographicMask(cardBack, cardBackTexture);
       updateShineMask(cardBack, cardBackTexture);
 
-      // Replace placeholders and update masks (bottom left)
+      // (bottom left)
       replaceCardContentWithBg(secondCard, secondBaseTexture, secondBgTexture, secondCharacterTexture, true);
       updateHolographicMask(secondCard, secondBaseTexture);
       updateShineMask(secondCard, secondBaseTexture);
 
-      // Replace back placeholders and update masks (bottom right) 
+      // (bottom right) 
       replaceCardContent(secondCardBack, secondBackTexture, null, true);
       updateHolographicMask(secondCardBack, secondBackTexture);
       updateShineMask(secondCardBack, secondBackTexture);
@@ -716,7 +725,7 @@ const ParallaxCard = ({ effect }) => {
       container.addChild(character);
     }
 
-    // Re-add holo and shine containers
+    // Re-add holographic and shine containers
     container.addChild(holoContainer);
     container.addChild(shineContainer);
 
@@ -964,7 +973,7 @@ const ParallaxCard = ({ effect }) => {
       shadow.alpha = Math.min(0.4 + shadowIntensity, 1);
     }
 
-    // Shine effect 
+    // Shine effect - scale with card selection
     if (shine) {
       shine.y = y * 120;
       shine.alpha = intensity * 0.4 + (isSelected ? 0.3 : 0);
@@ -977,11 +986,11 @@ const ParallaxCard = ({ effect }) => {
       const shineScale = isSelected ? 1.07 : 1.0; 
       cardData.shineContainer.scale.set(shineScale);
 
-      // shine mask follow the parallax effect 
+      // Make the shine mask follow the parallax effect but compensate for container scaling
       const cardCurrentScale = intendedScale + Math.abs(x + y) * scaleMultiplier + selectionScaleBonus;
-      cardData.shineMask.scale.set(cardCurrentScale / shineScale); 
+      cardData.shineMask.scale.set(cardCurrentScale / shineScale); // Divide by container scale
       cardData.shineMask.skew.set(rotY * 0.3, rotX * 0.3);
-      cardData.shineMask.x = (x * 1.5) / shineScale; 
+      cardData.shineMask.x = (x * 1.5) / shineScale; // Compensate position too
       cardData.shineMask.y = (y * 1.5) / shineScale;
 
       if (isSelected) {
@@ -989,7 +998,7 @@ const ParallaxCard = ({ effect }) => {
       }
     }
 
-    // holo effect
+    // holo effect with updated mask handling
     if (cardData.holoStrips && holographicEnabledRef.current) {
       const time = Date.now() * 0.001;
       const baseAlpha = 0.3 + (intensity * 0.2) + (isSelected ? 0.2 : 0);
@@ -1002,7 +1011,7 @@ const ParallaxCard = ({ effect }) => {
         
         const stripAlpha = Math.max(0, baseAlpha + Math.sin(time * 2 + offset) * 0.15);
         strip.alpha = stripAlpha;
-        strip.x = (index - cardData.holoStrips.length/2) * 25 + waveOffset + x * 15;
+        strip.x = (index - cardData.holoStrips.length/2) * 20 + waveOffset + x * 15;
         strip.y = y * 10 + Math.cos(time * 1.2 + offset) * 8;
         strip.rotation = 0.4 + (x * 0.1) + Math.sin(time * 0.8 + offset) * 0.05;
         strip.scale.set(1 + intensity * 0.1 + Math.sin(time * 3 + offset) * 0.02);
@@ -1012,7 +1021,7 @@ const ParallaxCard = ({ effect }) => {
         }
       });
 
-      // Update holographic mask scaling if it exists
+      // Update holo mask scaling if it exists
       if (cardData.holoMask) {
         const holoScale = isSelected ? 1.07 : 1.0;
         cardData.holoContainer.scale.set(holoScale);
@@ -1026,16 +1035,16 @@ const ParallaxCard = ({ effect }) => {
         cardData.holoMask.y = (y * 1.5) / holoScale;
       }
     } else if (cardData.holoStrips) {
-      console.log('Holographic effect OFF - turning off strips');
-      // Turn off holographic effect
+      console.log('Holo effect OFF - turning off strips');
+      // Turn off holo effect
       cardData.holoStrips.forEach(strip => {
         strip.alpha = 0;
       });
     } else {
-      console.log('No holographic strips found on card');
+      console.log('No holo strips found on card');
     }
 
-    // Purple atmosphere enhancement for selected bottom cards
+    // Purple atmosphere +++ for selected bottom cards
     if (purpleAtmosphere) {
       purpleAtmosphere.alpha = 0.4 + (isSelected ? 0.6 : 0);
       purpleAtmosphere.scale.set(1.5 + (isSelected ? 1 : 0));
@@ -1079,14 +1088,14 @@ const ParallaxCard = ({ effect }) => {
     holographicEnabledRef.current = newState; // Keep ref in sync
     console.log('Holographic toggled to:', newState);
     
-    // update all cards with new holographic state
+    // update all cards with new holo state
     setTimeout(() => updateAllCardsHolographic(), 10); 
   };
 
   return (
     <div>
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <h2>Clickable! Floating! Holographic!</h2>
+        <h2>Clickable! Floating! "Holographic!"</h2>
         <button 
           onClick={toggleHolographic}
           style={{
