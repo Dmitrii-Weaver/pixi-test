@@ -1114,6 +1114,7 @@ const ParallaxCard = ({ effect }) => {
           {holographicEnabled ? 'Holographic ON' : ' Holographic OFF'}
         </button>
       </div>
+      <h2>With hand drawn and provided assets!</h2>
       <div ref={containerRef} style={{ border: '1px solid #ccc', margin: '20px 0' }} />
     </div>
   );
