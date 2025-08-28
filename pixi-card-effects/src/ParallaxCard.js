@@ -90,25 +90,24 @@ const ParallaxCard = ({ effect }) => {
     const strips = [];
     const colors = [0xff0080, 0xff4000, 0xff8000, 0xffff00, 0x80ff00, 0x00ff80, 0x0080ff, 0x4000ff];
     
-    // Create more strips with better spacing for full coverage
-    const totalStrips = colors.length + 4; // Add 4 extra strips for better coverage
+    
+    const totalStrips = colors.length + 4; 
     
     for (let i = 0; i < totalStrips; i++) {
       const strip = new PIXI.Graphics();
-      const colorIndex = i % colors.length; // Cycle through colors
+      const colorIndex = i % colors.length; 
       strip.beginFill(colors[colorIndex], 0.4);
       
-      // Create diagonal strips that cover the card
       const width = 30;
       const height = 400;
       strip.drawRect(-width/2, -height/2, width, height);
       strip.endFill();
       
-      // Position strips with tighter spacing for better coverage
-      strip.x = (i - totalStrips/2) * 20; // Reduced from 25 to 20 for tighter spacing
+      
+      strip.x = (i - totalStrips/2) * 20; 
       strip.rotation = 0.4; // Diagonal angle
       strip.alpha = 0;
-      strip.blendMode = 'screen'; // Beautiful holographic blend
+      strip.blendMode = 'screen'; // holographic blend
       
       strips.push(strip);
       holoContainer.addChild(strip);
@@ -117,7 +116,7 @@ const ParallaxCard = ({ effect }) => {
     // Create mask - use image-based mask if available, otherwise fallback to geometric
     let mask;
     if (maskTexture) {
-      // Use the actual card image as mask
+      // Use card image as mask
       mask = new PIXI.Sprite(maskTexture);
       mask.anchor.set(0.5);
       // Scale to match the card scale
@@ -302,18 +301,16 @@ const ParallaxCard = ({ effect }) => {
     let mask;
     
     if (maskTexture) {
-      // Use the actual card image as mask
       mask = new PIXI.Sprite(maskTexture);
       mask.anchor.set(0.5);
       // Scale to match the card scale
       mask.scale.set(isBottomRow ? 0.25 : 0.5);
     } else {
-      // Fallback to geometric mask
       mask = new PIXI.Graphics();
       mask.beginFill(0xffffff);
 
       if (isBottomRow) {
-        // Create shape with cut corners matching the card
+        // Create shape with cut corners 
         const cornerSize = 15;
         mask.moveTo(-100 + cornerSize, -140);
         mask.lineTo(100 - cornerSize, -140);
@@ -326,7 +323,7 @@ const ParallaxCard = ({ effect }) => {
         mask.lineTo(-100 + cornerSize, -140);
         mask.closePath();
       } else {
-        // Top row cards - rounded rectangle
+        // Top row cards 
         mask.drawRoundedRect(-100, -140, 200, 280, 10);
       }
 
@@ -385,7 +382,7 @@ const ParallaxCard = ({ effect }) => {
     shadow.alpha = 0.6;
     cardContainer.addChild(shadow);
 
-    // Choose glow color and position
+    // glow color and position
     const glowColor = isBottomRow ? 'blue' : 'red';
     const glowTexture = createGlowTexture(40, glowColor);
 
